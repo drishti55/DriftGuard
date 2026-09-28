@@ -27,15 +27,16 @@ class ExperimentRunner:
         from app.config import METADATA_DIR, SPLITS_DIR
         split_file = SPLITS_DIR / f"{config.dataset_split.lower()}.jsonl"
         
-        target_repo = normalize_repository_name(config.repository)
+        target_repo = normalize_repository_name(config.repository).lower()
+        is_all_repos = not config.repository or target_repo in ("all", "dataset: all", "")
         
         cases = []
         if split_file.exists():
             with open(split_file, "r") as f:
                 for line in f:
                     case = json.loads(line)
-                    case_repo = normalize_repository_name(case.get("repository", ""))
-                    if config.repository == "all" or target_repo == "all" or case_repo == target_repo:
+                    case_repo = normalize_repository_name(case.get("repository", "")).lower()
+                    if is_all_repos or case_repo == target_repo:
                         cases.append(case)
         return cases
 
@@ -53,9 +54,12 @@ class ExperimentRunner:
         retriever = None
         
         if mode == "rag":
-            # Initialize chunking & retrieval based on config
-            # (To be properly wired to app.retrieval)
-            pass
+            from app.retrieval.vector_store import VectorStore
+            from app.retrieval.retriever import Retriever
+            from app.ingestion.repository_loader import RepositoryLoader
+            vector_store = VectorStore()
+            repo_loader = RepositoryLoader()
+            retriever = Retriever(vector_store=vector_store, repo_loader=repo_loader)
             
         detector = DriftDetector(llm_client=llm, retriever=retriever)
         
@@ -72,11 +76,11 @@ class ExperimentRunner:
         )
         
         # 4. Calculate Metrics (if ground truth available)
-        # Filter out cases with Analysis Error from metrics
+        # Filter out cases with Analysis Error or Failed from metrics
         valid_cases = []
         valid_reports = []
         for c, r in zip(cases, reports):
-            if r.verification_status != "Analysis Error":
+            if r.verification_status not in ("Analysis Error", "Analysis Failed") and r.parse_success:
                 valid_cases.append(c)
                 valid_reports.append(r)
                 
@@ -84,7 +88,10 @@ class ExperimentRunner:
             metrics = {}
         else:
             y_true = [c.get("drift_present", False) for c in valid_cases]
-            y_pred = [True if r.verification_status == "Confirmed Drift" else False for r in valid_reports]
+            if config.enable_evidence_verification:
+                y_pred = [True if r.verification_status == "Confirmed Drift" else False for r in valid_reports]
+            else:
+                y_pred = [r.prediction.drift_present if r.prediction else False for r in valid_reports]
             metrics = compute_detection_metrics(y_true, y_pred) if "drift_present" in valid_cases[0] else {}
         
         # 5. Build Result

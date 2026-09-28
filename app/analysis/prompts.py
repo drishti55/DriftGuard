@@ -39,9 +39,9 @@ STRICT RULES:
 1. extracted_fact_1 MUST be an exact verbatim quote from the Artifact 1 content shown below. Do not invent or paraphrase.
 2. extracted_fact_2 MUST be an exact verbatim quote from the Artifact 2 content shown below. Do not invent or paraphrase.
 3. artifact_1_lines and artifact_2_lines MUST be actual line numbers from the content provided.
-4. If you cannot find a specific verbatim quote proving the contradiction, set drift_present=false.
+4. If a contradiction involves something being MISSING (e.g., a missing dependency in requirements.txt), quote the entire file content or the relevant block where it *should* have appeared.
 5. Do NOT flag a drift unless you have a concrete, specific quote from BOTH artifacts proving the contradiction.
-6. Only flag drift if there is a real functional mismatch, not just a style or naming difference."""
+6. Look closely for CLI argument mismatches, API route mismatches, and undocumented imports. These are functional drifts, not just style differences."""
 
 
 # Few-shot examples (severity removed)
@@ -86,6 +86,48 @@ FEW_SHOT_EXAMPLES = [
             "extracted_fact_1": 'result = authenticate("user", "pass")',
             "extracted_fact_2": "def login(username, password, mfa_code=None):",
             "evidence": "tests/test_auth.py calls authenticate() on line 2, but src/auth.py defines login() on line 1. The function was renamed but the test was not updated."
+        }
+    },
+    {
+        "artifact_1": {
+            "path": "README.md",
+            "type": "documentation",
+            "content": 'Run the tool:\n```bash\npython main.py --category Food\n```'
+        },
+        "artifact_2": {
+            "path": "main.py",
+            "type": "source_code",
+            "content": 'parser.add_argument("--cat", type=str, required=True, help="Expense category")'
+        },
+        "expected_output": {
+            "drift_present": True,
+            "drift_type": "documentation_vs_code",
+            "artifact_1_lines": "3",
+            "artifact_2_lines": "1",
+            "extracted_fact_1": 'python main.py --category Food',
+            "extracted_fact_2": 'parser.add_argument("--cat", type=str, required=True, help="Expense category")',
+            "evidence": "README.md instructs users to use the `--category` flag, but main.py actually implements the flag as `--cat`."
+        }
+    },
+    {
+        "artifact_1": {
+            "path": "requirements.txt",
+            "type": "dependency",
+            "content": 'requests==2.31.0\npytest==7.4.0'
+        },
+        "artifact_2": {
+            "path": "main.py",
+            "type": "source_code",
+            "content": 'import requests\nimport tabulate'
+        },
+        "expected_output": {
+            "drift_present": True,
+            "drift_type": "dependency_vs_code",
+            "artifact_1_lines": "1-2",
+            "artifact_2_lines": "2",
+            "extracted_fact_1": 'requests==2.31.0\npytest==7.4.0',
+            "extracted_fact_2": 'import tabulate',
+            "evidence": "main.py imports the `tabulate` library, but `tabulate` is missing from the declared dependencies in requirements.txt."
         }
     },
 ]

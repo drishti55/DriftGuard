@@ -1,0 +1,228 @@
+.analyze-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.analyze-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6) var(--space-8);
+  border-bottom: 1px solid var(--border);
+  background-color: var(--surface);
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.analyze-content {
+  flex: 1;
+  padding: var(--space-8);
+  overflow-y: auto;
+}
+
+.empty-state-large, .loading-state-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  text-align: center;
+}
+
+.empty-state-large h3, .loading-state-large h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+  margin-top: var(--space-6);
+  letter-spacing: 0.05em;
+}
+
+.loading-steps {
+  margin-top: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: left;
+  width: 250px;
+}
+
+.step {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.step::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+}
+
+.step.active {
+  color: var(--text-primary);
+}
+
+.step.active::before {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-alpha);
+}
+
+.error-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid var(--danger-alpha);
+  border-radius: var(--radius-md);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.metric-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.drifts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.drift-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.drift-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.drift-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
+}
+
+.drift-badge.high {
+  background-color: var(--danger-alpha);
+  color: var(--danger);
+}
+
+.drift-type {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.drift-artifacts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background-color: var(--bg);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+}
+
+.artifact {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.connection {
+  color: var(--text-muted);
+}
+
+.drift-evidence {
+  background-color: var(--surface-raised);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
+
+.evidence-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+.drift-evidence p {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.success-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background-color: rgba(16, 185, 129, 0.05);
+  border: 1px solid var(--success-alpha);
+  border-radius: var(--radius-md);
+}
+
+.success-panel h4 {
+  margin-bottom: var(--space-1);
+}
