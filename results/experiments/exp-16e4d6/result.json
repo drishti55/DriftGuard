@@ -1,0 +1,33 @@
+{
+  "experiment_id": "exp-16e4d6",
+  "config": {
+    "experiment_id": "exp-16e4d6",
+    "repository": "https://github.com/tiangolo/sqlmodel",
+    "commit": null,
+    "model": "qwen2.5-coder:7b",
+    "prompt_version": "baseline_v1",
+    "rag_mode": "RAG",
+    "chunking_strategy": "AST-aware",
+    "chunk_size": 512,
+    "overlap": 64,
+    "embedding_model": "all-MiniLM-L6-v2",
+    "retrieval_strategy": "Dense Embedding",
+    "top_k": 5,
+    "dataset_split": "Test",
+    "max_cases": 100,
+    "enable_evidence_verification": true,
+    "enable_fix_validation": false,
+    "timestamp": "2026-09-24T04:24:18.878500"
+  },
+  "f1_score": 0.0,
+  "precision": 0.0,
+  "recall": 0.0,
+  "macro_f1": 0.0,
+  "false_positive_rate": 0.0,
+  "evidence_accuracy": 0.0,
+  "evidence_completeness": 0.0,
+  "avg_latency_s": 0.0,
+  "total_tokens": 0,
+  "total_cases_analyzed": 0,
+  "timestamp": "2026-09-24T04:24:18.955920"
+}

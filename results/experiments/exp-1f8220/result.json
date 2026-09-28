@@ -1,0 +1,33 @@
+{
+  "experiment_id": "exp-1f8220",
+  "config": {
+    "experiment_id": "exp-1f8220",
+    "repository": "https://github.com/fastapi/sqlmodel",
+    "commit": null,
+    "model": "qwen2.5-coder:7b",
+    "prompt_version": "baseline_v1",
+    "rag_mode": "Non-RAG",
+    "chunking_strategy": "AST-aware",
+    "chunk_size": 512,
+    "overlap": 64,
+    "embedding_model": "all-MiniLM-L6-v2",
+    "retrieval_strategy": "Dense Embedding",
+    "top_k": 5,
+    "dataset_split": "Test",
+    "max_cases": 100,
+    "enable_evidence_verification": true,
+    "enable_fix_validation": false,
+    "timestamp": "2026-09-28T13:05:27.949088"
+  },
+  "f1_score": null,
+  "precision": null,
+  "recall": null,
+  "macro_f1": null,
+  "false_positive_rate": null,
+  "evidence_accuracy": null,
+  "evidence_completeness": null,
+  "avg_latency_s": 0.0,
+  "total_tokens": 0,
+  "total_cases_analyzed": 0,
+  "timestamp": "2026-09-28T13:05:28.042066"
+}
