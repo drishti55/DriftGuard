@@ -1,222 +1,160 @@
-# DriftGuard — AI-Powered Cross-Artifact Consistency Analyzer
+# DriftGuard — Autonomous AIDevOps Consistency & Drift Platform
 
-DriftGuard detects inconsistencies ("drift") between related artifacts in software repositories using a local LLM + RAG pipeline. It analyzes whether code, tests, documentation, dependency files, CI configs, Dockerfiles, and API specs are in sync with each other.
+DriftGuard is an autonomous, open-source multi-agent code intelligence and consistency platform. It detects and audits subtle inconsistencies ("drift") between related software artifacts—such as source code, unit tests, dependency manifests, configuration files, and documentation—using multi-language AST perception, cross-file SCIP symbol graphs, and mathematically grounded LLM reasoning.
 
-## Architecture
+---
 
+## 🏛️ Architecture Overview
+
+```text
+Git Working Tree / Delta
+       ↓
+Incremental Perception Agent (GitDeltaScanner)
+       ↓
+Technology Stack Detection (StackDetector)
+       ↓
+Multi-Language Code Intelligence (TreeSitterEngine: AST + SCIPIndexer)
+       ↓
+Candidate Pair Generation (Code ↔ Tests, Symbols ↔ Consumers, Code ↔ Manifests)
+       ↓
+Grounded Drift Auditor (DriftAuditorAgent via OmniRoute Gateway)
+       ↓
+Mathematical Verbatim Invariant Verification (EvidenceVerifier)
+       ↓
+CLI & Multi-Page Dashboard & FastAPI Server
 ```
-Repository (local)
-       ↓
-Artifact Extraction & Classification
-       ↓
-Chunking → Embeddings → ChromaDB (Vector Index)
-       ↓
-Related Artifact Retrieval (RAG)
-       ↓
-LLM Analysis (Ollama — qwen2.5-coder:7b)
-       ↓
-Structured Drift Report (JSON)
-       ↓
-Streamlit UI / CLI / Export
-```
 
-## Dataset
+---
 
-The system is built on a curated dataset of **154,241 labelled consistency cases** from **489 open-source repositories** across 20 programming languages.
-
-| Split | Cases | Purpose |
-|-------|-------|---------|
-| Train | 100,825 | Few-shot examples for prompts |
-| Validation | 29,267 | Tuning and development |
-| Test | 24,149 | Final evaluation benchmark |
-
-Cases are split by **repository** (not randomly) to prevent data leakage.
-
-### Drift Categories
-
-| Category | Description |
-|----------|-------------|
-| `dependency_vs_code` | Module imported but not in dependency file |
-| `test_vs_code` | Test references outdated code |
-| `documentation_vs_code` | README/docs disagree with implementation |
-| `api_spec_vs_code` | OpenAPI spec doesn't match API code |
-| `ci_vs_project` | CI workflow is inconsistent with project |
-| `docker_vs_project` | Dockerfile mismatches project structure |
-| `build_config_vs_project` | Build config doesn't match code |
-| `configuration_vs_code` | Config files disagree with source |
-| `no_drift` | Artifacts are consistent (negative class) |
-
-## Installation
+## 🚀 Quickstart & Setup
 
 ### Prerequisites
+- Python 3.12+ managed via [`uv`](https://docs.astral.sh/uv/)
+- OmniRoute gateway running locally on `http://localhost:20128` (or local Ollama fallback)
 
-- Python 3.11+
-- [Ollama](https://ollama.ai) installed and running
-- At least one code model pulled:
-
+### Installation
 ```bash
-ollama pull qwen2.5-coder:7b    # Primary (recommended)
-ollama pull codellama:7b          # Fallback
-```
+# Clone and navigate into workspace
+git clone https://github.com/ojhaprathmesh/DriftGuard_Repo.git
+cd DriftGuard_Repo
 
-### Setup
+# Sync dependencies and lockfile
+uv sync
 
-```bash
-cd "BUGTRACE prj"
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy environment config
+# Configure environment
 cp .env.example .env
-
-# Verify setup
-python scripts/smoke_test.py
 ```
 
-## Usage
+### Running Tests
+```bash
+uv run pytest
+```
 
-### CLI — Analyze a Repository
+---
+
+## 💻 CLI Usage
+
+DriftGuard provides a unified command-line tool accessible via `uv run driftguard` or `uv run python app/main.py`:
 
 ```bash
-# List available repositories
-python scripts/run_analysis.py --list
+# 1. Autonomous consistency audit on git delta
+uv run driftguard audit --max 5
 
-# Analyze a specific repo
-python scripts/run_analysis.py tiangolo/fastapi --max-pairs 10
+# 2. Inspect git delta and modified hunks
+uv run driftguard diff --base main
 
-# Save results to JSON
-python scripts/run_analysis.py gin-gonic/gin --output results.json
+# 3. Detect technology stack and effective build matrix
+uv run driftguard scan-stack
+
+# 4. Ingest and run full perception
+uv run driftguard perceive --base HEAD~1
+
+# 5. Validate repository configuration
+uv run driftguard config --show
+
+# 6. Launch the Streamlit multi-page management dashboard
+uv run driftguard ui
 ```
 
-### CLI — Run Evaluation
+---
 
-```bash
-# Baseline evaluation (200 test cases)
-python scripts/run_evaluation.py --mode baseline --sample-size 200
+## 📁 Repository Structure
 
-# RAG evaluation
-python scripts/run_evaluation.py --mode rag --sample-size 200
-
-# Run both and compare
-python scripts/run_evaluation.py --mode both --sample-size 200
-
-# Compare previously saved results
-python scripts/run_evaluation.py --mode compare
-```
-
-### Streamlit UI
-
-```bash
-streamlit run app/ui/streamlit_app.py
-```
-
-### Unified CLI
-
-```bash
-python app/main.py analyze tiangolo/fastapi
-python app/main.py evaluate --mode baseline --sample-size 20
-python app/main.py ui
-python app/main.py list
-```
-
-## Project Structure
-
-```
-BUGTRACE prj/
-├── driftguard-dataset/          # Pre-built dataset (untouched)
-│   ├── repositories/            # 531 cloned repos (36 GB)
-│   ├── snapshots/               # 1,593 point-in-time copies (78 GB)
-│   ├── metadata/                # Artifact index, drifts, cases
-│   ├── splits/                  # train/val/test JSONL
-│   └── scripts/                 # Dataset engineering pipeline
+```text
+DriftGuard_Repo/
+├── app/                         # Core Python platform
+│   ├── agents/                  # Autonomous perception & audit agents
+│   │   ├── coordinator.py       # Root coordinator agent
+│   │   ├── delta_scanner.py     # Git diff & hunk perception
+│   │   ├── stack_detector.py    # Polyglot stack & build matrix detection
+│   │   └── drift_auditor.py     # Grounded drift auditor agent
+│   ├── analysis/                # Drift detection & evidence validation
+│   │   ├── drift_detector.py    # Baseline LLM drift detector
+│   │   ├── drift_pipeline.py    # End-to-end analysis pipeline
+│   │   ├── evidence_verifier.py # Verbatim substring citation verifier
+│   │   ├── output_validator.py  # Structured JSON schema validation
+│   │   ├── prompts.py           # Grounded prompt templates & few-shot specs
+│   │   └── relationship_graph.py# Cross-artifact dependency graph
+│   ├── api/                     # REST API layer
+│   │   └── main.py              # FastAPI server & endpoints (/api/audit, etc.)
+│   ├── cli.py                   # Unified CLI implementation
+│   ├── main.py                  # CLI runner & package delegation wrapper
+│   ├── config.py                # Environment & runtime configuration
+│   ├── config_schema.py         # .driftguard.yml Pydantic schema
+│   ├── ingestion/               # Repository loading & classification
+│   │   ├── models.py            # RepoArtifact & RepoInfo canonical data models
+│   │   ├── repository_loader.py # Workspace repository loader
+│   │   ├── repository_scanner.py# Workspace scanner & classifier
+│   │   ├── repository_ingestor.py # Git & archive workspace ingestion
+│   │   ├── artifact_extractor.py# Structural regex extractor
+│   │   └── file_classifier.py   # Multi-language file classification
+│   ├── intelligence/            # Multi-language code intelligence
+│   │   ├── treesitter_parser.py # Universal AST engine (Python ast + TS/JS/Go Tree-sitter)
+│   │   └── scip_indexer.py      # Cross-file SCIP symbol definition & reference graph
+│   ├── retrieval/               # Vector retrieval & embeddings
+│   │   ├── chunking.py          # Code chunking
+│   │   ├── embeddings.py        # Sentence transformers
+│   │   ├── vector_store.py      # ChromaDB interface
+│   │   └── retriever.py         # Cross-artifact retriever
+│   └── ui/                      # Streamlit management dashboard
+│       ├── dashboard.py         # Multi-page dashboard navigation
+│       ├── streamlit_app.py     # Consolidated single-page interactive UI
+│       ├── session.py           # UI session state persistence
+│       └── pages/               # Multi-page dashboard views
+│           ├── 1_Overview.py
+│           ├── 2_Drift_Explorer.py
+│           ├── 3_Dependency_Graph.py
+│           └── 4_Settings.py
 │
-├── app/                         # AI application
-│   ├── config.py                # Central configuration
-│   ├── main.py                  # Unified CLI entry point
-│   ├── analysis/                # LLM-powered drift detection
-│   │   ├── llm_client.py        # Ollama wrapper with retry
-│   │   ├── prompts.py           # Prompt templates + few-shot
-│   │   ├── drift_detector.py    # Main orchestrator
-│   │   └── output_validator.py  # Pydantic validation + JSON extraction
-│   ├── ingestion/               # Repository loading
-│   │   ├── repository_loader.py # Load from local dataset
-│   │   ├── artifact_extractor.py# Code structure extraction
-│   │   └── file_classifier.py   # File type classification
-│   ├── retrieval/               # RAG pipeline
-│   │   ├── chunking.py          # Code-aware chunking
-│   │   ├── embeddings.py        # Sentence-transformers
-│   │   ├── vector_store.py      # ChromaDB
-│   │   └── retriever.py         # Cross-artifact retrieval
-│   ├── evaluation/              # Benchmarking
-│   │   ├── metrics.py           # F1, precision, recall, etc.
-│   │   ├── evaluate_baseline.py # Direct LLM evaluation
-│   │   ├── evaluate_rag.py      # RAG-enhanced evaluation
-│   │   └── error_analysis.py    # Error breakdown + comparison
-│   ├── validation/
-│   │   └── fix_validator.py     # Suggested-fix validation
-│   └── ui/
-│       └── streamlit_app.py     # Web interface
+├── frontend/                    # Vite + React + TypeScript web application
+│   ├── src/                     # React application source
+│   │   ├── components/AppShell.tsx
+│   │   ├── pages/LandingPage.tsx
+│   │   └── pages/AnalyzeMode.tsx
+│   └── package.json
 │
-├── scripts/                     # CLI entry points
-│   ├── run_analysis.py          # Analyze a repository
-│   ├── run_evaluation.py        # Run evaluations
-│   └── smoke_test.py            # Verify pipeline
+├── tests/                       # Automated test suite
+│   ├── test_api.py              # FastAPI endpoints tests
+│   ├── test_code_intelligence.py# Tree-sitter & SCIP indexer tests
+│   ├── test_drift_auditor.py    # DriftAuditorAgent & verbatim invariant tests
+│   └── test_perception_and_config.py # Stack detection, delta scanner & config tests
 │
-├── results/                     # Evaluation outputs
-│   ├── predictions/             # Per-case predictions (JSONL)
-│   ├── metrics/                 # Metric JSONs
-│   └── reports/                 # Markdown reports
-│
-├── requirements.txt
-├── .env.example
-└── README.md
+├── pyproject.toml               # Modern PEP 621 dependencies & scripts
+├── uv.lock                      # Deterministic lockfile
+└── .driftguard.yml              # Workspace build & audit configuration
 ```
 
-## Model Setup
+---
 
-DriftGuard uses **local LLM inference** via Ollama. No API keys or cloud services required.
+## 🛡️ Mathematical Grounding Invariant
 
-| Model | Size | Role |
-|-------|------|------|
-| `qwen2.5-coder:7b` | 4.7 GB | Primary — best code understanding |
-| `codellama:7b` | 3.8 GB | Fallback |
-| `starcoder2:3b` | 1.7 GB | Fast/lightweight option |
-| `gemma2:9b` | 5.4 GB | General reasoning |
+To guarantee **zero hallucinations**, every candidate drift reported by DriftGuard must satisfy the strict verbatim citation property:
 
-## Evaluation Metrics
+$$\text{Verdict} = \text{Confirmed Drift} \iff (F_1 \sqsubseteq C_1) \land (F_2 \sqsubseteq C_2)$$
 
-### Drift Detection (Binary)
-- Accuracy, Precision, Recall, F1-Score
-- False Positive Rate, False Negative Rate
+Where:
+- $F_1, F_2$ are the exact verbatim textual quotes extracted from Artifact 1 and Artifact 2.
+- $C_1, C_2$ are the normalized file contents from disk.
+- $\sqsubseteq$ denotes strict continuous substring inclusion.
 
-### Drift Classification (Multi-class)
-- Classification Accuracy, Macro-F1
-- Per-category Precision, Recall, F1
-- Confusion Matrix
-
-### Severity Prediction
-- Accuracy, Macro-F1
-
-### Evidence Quality (Heuristic)
-- Artifact mention rate
-- Substantiveness rate
-- Identifier mention rate
-
-## Limitations
-
-- **Test set imbalance:** 89.4% of test cases are `dependency_vs_code` — evaluation uses stratified sampling and per-class metrics to mitigate
-- **LLM speed:** A 7B model processes ~1-3 cases/min locally; full test set (24k) requires overnight runs
-- **Heuristic evidence quality:** Evidence evaluation is rule-based, not human-judged
-- **Natural drift detection is heuristic-based:** Some detected drifts in the dataset may be false positives
-- **No fine-tuning performed:** The model is used zero/few-shot; fine-tuning could improve accuracy
-- **Fix validation is basic:** Only checks syntax, not semantic correctness
-
-## Future Work
-
-- Fine-tune a code model on the 100k training cases
-- Add GitHub PR webhook integration
-- Human evaluation of evidence and fix quality
-- Support for more languages (Haskell, Elixir, etc.)
-- IDE extension (VS Code / JetBrains)
-- Confidence calibration
+Any finding where the LLM invents, paraphrases, or hallucinates line content is immediately discarded by `EvidenceVerifier`.

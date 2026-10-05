@@ -84,6 +84,27 @@ def get_perception(
     return state.to_dict()
 
 
+@app.get("/api/audit")
+def get_audit(
+    workspace: Optional[str] = Query(None, description="Workspace path"),
+    base: Optional[str] = Query(None, description="Base reference"),
+    branch: Optional[str] = Query(None, description="Target branch"),
+    max_candidates: Optional[int] = Query(5, description="Max candidates to audit"),
+    model: Optional[str] = Query(None, description="OmniRoute model override"),
+):
+    """Executes Phase 2 AST & SCIP-grounded drift audit via OmniRoute."""
+    ws = Path(workspace) if workspace else PROJECT_ROOT
+    coord = CoordinatorAgent(workspace_path=ws)
+    state = coord.run_drift_audit(
+        base_branch=base,
+        target_branch=branch,
+        max_candidates=max_candidates,
+        model=model,
+    )
+    return state.to_dict()
+
+
+
 @app.get("/api/repositories")
 def list_repositories():
     """Lists available workspaces. In live mode, returns current project workspace."""

@@ -12,22 +12,24 @@ from typing import Dict, List, Optional
 from app.config_schema import DriftGuardConfig
 from app.agents.delta_scanner import GitDeltaScanner, GitDeltaReport
 from app.agents.stack_detector import StackDetector, StackReport
+from app.agents.drift_auditor import DriftAuditorAgent, DriftAuditReport
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class CoordinatorSessionState:
-    """Central session blackboard holding perception reports and execution status."""
+    """Central session blackboard holding perception reports, audits, and execution status."""
     workspace_path: str
     config: DriftGuardConfig
     delta_report: GitDeltaReport
     stack_report: StackReport
-    audit_status: str = "INITIALIZED"  # 'INITIALIZED', 'SKIPPED', 'READY_FOR_AUDIT'
+    audit_report: Optional[DriftAuditReport] = None
+    audit_status: str = "INITIALIZED"  # 'INITIALIZED', 'SKIPPED', 'READY_FOR_AUDIT', 'AUDIT_COMPLETED'
     messages: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict:
-        return {
+        res = {
             "workspace_path": self.workspace_path,
             "audit_status": self.audit_status,
             "branch": self.delta_report.current_branch,
@@ -42,11 +44,14 @@ class CoordinatorSessionState:
             },
             "messages": self.messages,
         }
+        if self.audit_report:
+            res["audit_report"] = self.audit_report.to_dict()
+        return res
 
 
 class CoordinatorAgent:
     """
-    Coordinates repository perception and enforces governance rules.
+    Coordinates repository perception, code intelligence, and consistency audits.
     """
 
     def __init__(
@@ -58,6 +63,7 @@ class CoordinatorAgent:
         self.config = DriftGuardConfig.load(config_path or (self.workspace_path / ".driftguard.yml"))
         self.delta_scanner = GitDeltaScanner(self.workspace_path, self.config)
         self.stack_detector = StackDetector(self.workspace_path, self.config)
+        self.drift_auditor = DriftAuditorAgent(self.workspace_path)
 
     def run_initial_perception(
         self,
@@ -95,3 +101,35 @@ class CoordinatorAgent:
             audit_status=status,
             messages=messages,
         )
+
+    def run_drift_audit(
+        self,
+        base_branch: Optional[str] = None,
+        target_branch: Optional[str] = None,
+        max_candidates: Optional[int] = None,
+        model: Optional[str] = None,
+    ) -> CoordinatorSessionState:
+        """
+        Executes Phase 2 code intelligence and drift audit:
+        1. Ingests delta & stack perception.
+        2. Queries Tree-sitter & SCIP for cross-artifact candidates.
+        3. Audits candidates via OmniRoute gateway.
+        4. Enforces verbatim verification.
+        """
+        state = self.run_initial_perception(base_branch=base_branch, target_branch=target_branch)
+        if state.audit_status != "READY_FOR_AUDIT":
+            return state
+
+        audit_report = self.drift_auditor.audit_delta(
+            delta_report=state.delta_report,
+            max_candidates=max_candidates,
+            model=model,
+        )
+        state.audit_report = audit_report
+        state.audit_status = "AUDIT_COMPLETED"
+        state.messages.append(
+            f"Audit completed: {len(audit_report.confirmed_drifts)} confirmed drift(s) across "
+            f"{audit_report.total_candidates} candidate pair(s)."
+        )
+        return state
+

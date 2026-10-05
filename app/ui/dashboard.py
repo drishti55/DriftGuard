@@ -31,21 +31,14 @@ def main():
     
     pages = {
         "Core": [
-            st.Page("pages/1_Overview.py", title="Overview", icon="🏠"),
+            st.Page("pages/1_Overview.py", title="Repository Overview", icon="🏠"),
             st.Page("pages/2_Drift_Explorer.py", title="Drift Explorer", icon="🔍"),
         ],
-        "Research & Lab": [
-            st.Page("pages/3_Experiment_Lab.py", title="Experiment Lab", icon="🧪"),
-            st.Page("pages/4_Model_Comparison.py", title="Model Comparison", icon="📊"),
-            st.Page("pages/5_Evidence_Lab.py", title="Evidence Lab", icon="📋"),
-        ],
-        "Advanced Analysis": [
-            st.Page("pages/6_Dependency_Graph.py", title="Drift Graph", icon="🕸️"),
-            st.Page("pages/7_Predictive_Drift.py", title="Predictive Drift", icon="🔮"),
+        "Architecture": [
+            st.Page("pages/3_Dependency_Graph.py", title="Dependency Graph", icon="🕸️"),
         ],
         "System": [
-            st.Page("pages/8_Evaluation_Report.py", title="Evaluation Report", icon="📑"),
-            st.Page("pages/9_Settings.py", title="Settings", icon="⚙️"),
+            st.Page("pages/4_Settings.py", title="Settings", icon="⚙️"),
         ]
     }
     
