@@ -1,10 +1,7 @@
 import streamlit as st
-import time
 import pandas as pd
-from pathlib import Path
 from app.analysis.llm_client import LLMClient
 from app.analysis.drift_pipeline import DriftPipeline
-from app.validation.fix_validator import validate_fix
 
 st.title("🔍 Drift Explorer")
 

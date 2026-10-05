@@ -4,9 +4,7 @@ Loads repository data from the local driftguard-dataset.
 Resolves repos, snapshots, and artifact metadata from disk.
 """
 
-import json
 import logging
-import re
 from pathlib import Path
 from typing import Optional, List, Dict
 from dataclasses import dataclass, field
@@ -73,140 +71,30 @@ class RepoInfo:
 
 class RepositoryLoader:
     """
-    Loads repository data from the local driftguard-dataset.
-    Uses pre-extracted artifact metadata from artifacts.json when available,
-    falls back to scanning the repo directory on disk.
+    Lightweight workspace / repository loader for local repositories.
+    Provides backward-compatible interface for loading repository artifacts from disk.
     """
 
-    def __init__(self):
-        self._clone_data = None
-        self._artifacts_index = None  # repo_name -> list of artifact dicts
-
-    def _load_clone_data(self) -> dict:
-        """Load clone_results.json for repo path resolution."""
-        if self._clone_data is None:
-            self._clone_data = {}
-            if config.CLONE_RESULTS_JSON.exists():
-                with open(config.CLONE_RESULTS_JSON) as f:
-                    data = json.load(f)
-                for r in data.get("results", []):
-                    self._clone_data[r["full_name"]] = r
-        return self._clone_data
-
-    def _load_artifacts_index(self) -> dict:
-        """
-        Load artifacts.json and index by repository name.
-        This is a large file (~695MB) so we load it once and cache.
-        """
-        if self._artifacts_index is not None:
-            return self._artifacts_index
-
-        self._artifacts_index = {}
-        if config.ARTIFACTS_JSON.exists():
-            logger.info("Loading artifacts index (this may take a moment)...")
-            with open(config.ARTIFACTS_JSON) as f:
-                data = json.load(f)
-            for artifact in data.get("artifacts", []):
-                repo = artifact.get("repository", "")
-                if repo not in self._artifacts_index:
-                    self._artifacts_index[repo] = []
-                self._artifacts_index[repo].append(artifact)
-            logger.info(f"Loaded artifacts for {len(self._artifacts_index)} repositories")
-        return self._artifacts_index
+    def __init__(self, workspace_path: Optional[Path] = None):
+        self.workspace_path = Path(workspace_path) if workspace_path else config.PROJECT_ROOT
 
     def list_available_repos(self) -> List[str]:
-        """List all repository names available locally."""
-        clone_data = self._load_clone_data()
-        return sorted(clone_data.keys())
+        """List active workspace name."""
+        return [self.workspace_path.name]
 
     def get_repo_info(self, repo_name: str) -> Optional[RepoInfo]:
-        """
-        Get repository information by full name (e.g., 'tiangolo/fastapi').
-
-        Args:
-            repo_name: GitHub-style 'owner/repo' name
-
-        Returns:
-            RepoInfo with local paths and artifacts, or None if not found
-        """
-        clone_data = self._load_clone_data()
-
-        if repo_name not in clone_data:
-            logger.warning(f"Repository {repo_name} not found in clone results")
-            return None
-
-        repo_data = clone_data[repo_name]
-        repo_dir_name = repo_name.replace("/", "_")
-
-        # Resolve local path
-        local_path = config.REPOS_DIR / repo_dir_name
-        if not local_path.exists():
-            local_path = None
-
-        # Resolve snapshot path (use first available)
-        snapshot_path = None
-        commit_sha = ""
-        for snapshot in repo_data.get("snapshots", []):
-            sp = Path(snapshot["path"])
-            if sp.exists():
-                snapshot_path = sp
-                commit_sha = snapshot.get("commit_sha", "")
-                break
-
-        info = RepoInfo(
-            full_name=repo_name,
-            local_path=local_path,
-            snapshot_path=snapshot_path,
-            commit_sha=commit_sha,
-            language=repo_data.get("language", ""),
+        """Get repository info for local workspace or directory path."""
+        p = Path(repo_name)
+        target_path = p.resolve() if p.exists() and p.is_dir() else self.workspace_path
+        return RepoInfo(
+            full_name=target_path.name,
+            local_path=target_path,
+            snapshot_path=target_path,
         )
 
-        return info
-
-    def load_repo_artifacts(self, repo_name: str,
-                            use_metadata: bool = True) -> List[RepoArtifact]:
-        """
-        Load all artifacts for a repository.
-
-        If use_metadata=True, reads from the pre-extracted artifacts.json (fast).
-        Otherwise, scans the repo directory on disk (slower but works for new repos).
-
-        Args:
-            repo_name: GitHub-style 'owner/repo' name
-            use_metadata: Whether to use pre-extracted metadata
-
-        Returns:
-            List of RepoArtifact objects
-        """
-        if use_metadata:
-            return self._load_from_metadata(repo_name)
-        else:
-            return self._scan_from_disk(repo_name)
-
-    def _load_from_metadata(self, repo_name: str) -> List[RepoArtifact]:
-        """Load artifacts from pre-extracted artifacts.json."""
-        index = self._load_artifacts_index()
-
-        if repo_name not in index:
-            logger.warning(f"No artifacts metadata for {repo_name}")
-            return []
-
-        artifacts = []
-        for raw in index[repo_name]:
-            artifact = RepoArtifact(
-                path=raw.get("path", ""),
-                artifact_type=raw.get("type", "other"),
-                size_bytes=raw.get("size_bytes", 0),
-                extension=raw.get("extension", ""),
-                imports=raw.get("imports", []),
-                function_signatures=raw.get("function_signatures", []),
-                api_routes=raw.get("api_routes", []),
-                content_snippet=raw.get("content_snippet", ""),
-                parsed_dependencies=raw.get("parsed_dependencies", []),
-            )
-            artifacts.append(artifact)
-
-        return artifacts
+    def load_repo_artifacts(self, repo_name: str, use_metadata: bool = False) -> List[RepoArtifact]:
+        """Scan the repo directory on disk and classify files."""
+        return self._scan_from_disk(repo_name)
 
     def _scan_from_disk(self, repo_name: str) -> List[RepoArtifact]:
         """Scan the repo directory on disk and classify files."""
@@ -223,7 +111,6 @@ class RepositoryLoader:
             if file_path.is_dir():
                 continue
 
-            # Skip hidden dirs, node_modules, vendor, etc.
             rel_path = str(file_path.relative_to(scan_dir))
             if any(part.startswith('.') for part in rel_path.split('/')):
                 if not rel_path.startswith('.github/'):
@@ -245,30 +132,10 @@ class RepositoryLoader:
     def read_file_content(self, repo_name: str, file_path: str,
                           commit_sha: str = None,
                           max_chars: int = None) -> str:
-        """
-        Read actual file content from disk.
-
-        Args:
-            repo_name: 'owner/repo'
-            file_path: Relative path within the repo
-            commit_sha: Optional commit SHA for snapshot lookup
-            max_chars: Max characters to return
-
-        Returns:
-            File content as string
-        """
+        """Read actual file content from disk with character limits."""
         max_chars = max_chars or config.MAX_CONTEXT_CHARS
-        repo_dir_name = repo_name.replace("/", "_")
-
-        # Try snapshot first
-        if commit_sha:
-            snapshot_name = f"{repo_dir_name}_{commit_sha[:8]}"
-            full_path = config.SNAPSHOTS_DIR / snapshot_name / file_path
-            if full_path.exists():
-                return self._read_with_limit(full_path, max_chars)
-
-        # Try repo directory
-        full_path = config.REPOS_DIR / repo_dir_name / file_path
+        target_dir = Path(repo_name) if Path(repo_name).is_dir() else self.workspace_path
+        full_path = target_dir / file_path
         if full_path.exists():
             return self._read_with_limit(full_path, max_chars)
 
@@ -290,3 +157,4 @@ class RepositoryLoader:
             return content
         except Exception as e:
             return f"[Error reading file: {e}]"
+

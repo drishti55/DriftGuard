@@ -1,0 +1,55 @@
+version: "1.0"
+
+# Target branch filters
+branches:
+  include:
+    - main
+    - master
+    - "release/*"
+    - "feature/*"
+  exclude:
+    - "docs-only/*"
+    - "gh-pages"
+
+# Autonomous Stack Detection & Command Overrides
+build_matrix:
+  auto_detect: true
+  overrides:
+    frontend:
+      working_directory: "./frontend"
+      build_command: "npm run build"
+      test_command: "npm test -- --watchAll=false"
+    backend:
+      working_directory: "./app"
+      build_command: "python -m py_compile app/**/*.py"
+      test_command: "pytest tests/"
+
+# Sandboxed Verification Engine
+sandbox:
+  runtime: "docker" # 'docker' (local CLI) | 'kubernetes' (cloud CI)
+  memory_limit: "2Gi"
+  cpu_limit: "2.0"
+  timeout_seconds: 120
+  network_access: "restricted"
+
+# Bounded Self-Healing Loop
+repair:
+  enabled: true
+  max_attempts: 3
+  require_passing_tests: true
+  minimal_diff_only: true
+
+# Review & Pull Request Actuation
+pull_request:
+  auto_create: true
+  target_branch_prefix: "driftguard/fix-"
+  labels:
+    - "driftguard"
+    - "automated-fix"
+    - "needs-review"
+  reviewers: []
+
+# Multi-Model Routing Configuration (via OmniRoute)
+model_routing:
+  auditing_tier: "fast"
+  repair_tier: "deep"

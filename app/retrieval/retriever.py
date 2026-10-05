@@ -5,7 +5,7 @@ Builds context for RAG-enhanced drift detection.
 """
 
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from app import config
 from app.retrieval.vector_store import VectorStore

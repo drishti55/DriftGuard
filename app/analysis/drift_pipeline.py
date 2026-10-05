@@ -15,7 +15,7 @@ from app.analysis.drift_detector import DriftReport, DriftPrediction
 from app.analysis.evidence_verifier import EvidenceVerifier, EvidenceVerificationResult
 from app.analysis.prompts import build_baseline_prompt
 from app.analysis.output_validator import ParseResult
-from app.ingestion.repository_loader import RepoInfo, RepoArtifact
+from app.ingestion.repository_loader import RepoInfo
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,6 @@ class DriftPipeline:
             a2_path = cand["artifact_2"]["path"]
             a2_type = cand["artifact_2"]["type"]
             rel_type = cand.get("relationship_type", "cross_artifact")
-            rationale = cand.get("rationale", "")
 
             if progress_callback:
                 progress_callback(i + 1, target_count, f"Analyzing ({i+1}/{target_count}): {Path(a1_path).name} ↔ {Path(a2_path).name}")

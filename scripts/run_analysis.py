@@ -20,8 +20,6 @@ from app.analysis.drift_pipeline import DriftPipeline
 from app.ingestion.repository_loader import RepositoryLoader
 from app.ingestion.repository_ingestor import IngestedRepository
 from app.ingestion.repository_scanner import RepositoryScanner
-from app.analysis.relationship_graph import RelationshipGraph
-from collections import Counter
 
 
 def main():
@@ -59,19 +57,14 @@ def main():
         return
 
     repo_name = args.repository
-    info = loader.get_repo_info(repo_name)
-    if not info:
-        # Check if it's a directory name with underscore
-        alt_name = repo_name.replace("/", "_")
-        local_dir = config.REPOS_DIR / alt_name
-        if local_dir.exists():
-            pass
-        else:
-            print(f"ERROR: Repository '{repo_name}' not found.")
-            sys.exit(1)
+    target_path = Path(repo_name) if repo_name else config.PROJECT_ROOT
+    if not target_path.exists():
+        target_path = config.PROJECT_ROOT / repo_name
+    if not target_path.exists():
+        print(f"ERROR: Repository workspace '{repo_name}' not found.")
+        sys.exit(1)
 
-    repo_dir_name = repo_name.replace("/", "_")
-    target_dir = (info.snapshot_path if info and info.snapshot_path else None) or (config.REPOS_DIR / repo_dir_name)
+    target_dir = target_path.resolve()
 
     print(f"\n{'='*60}")
     print(f"  DriftGuard Comprehensive Repository Analysis")
@@ -84,8 +77,8 @@ def main():
     ingested = IngestedRepository(
         source_type="local",
         workspace_path=target_dir,
-        original_source=repo_name,
-        commit_sha=info.commit_sha if info else ""
+        original_source=repo_name or str(target_dir.name),
+        commit_sha=""
     )
     scanner = RepositoryScanner()
     scanned_info = scanner.scan(ingested)

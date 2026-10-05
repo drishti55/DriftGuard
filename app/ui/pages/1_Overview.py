@@ -99,67 +99,44 @@ def render_repository_overview():
     
     st.markdown("---")
     st.markdown("### Ready for Analysis")
-    st.info("The repository is loaded. Go to the **Drift Explorer** to run an analysis or the **Experiment Lab** to configure research runs.")
+    st.info("The repository is loaded. Go to the **Drift Explorer** to run an analysis or inspect repository relationships.")
 
 def render_diagnostics():
-    """Renders the diagnostic panel showing pipeline health."""
-    st.markdown("### 🩺 Pipeline Health & Diagnostics")
+    """Renders the diagnostic panel showing workspace & gateway health."""
+    st.markdown("### 🩺 Workspace & Gateway Health")
     
-    from app.config import SPLITS_DIR
-    from app.experiments.runner import ExperimentRunner
-    from app.analysis.llm_client import LLMClient
+    from app import config
+    from app.config_schema import DriftGuardConfig
     
-    # 1. Dataset stats
-    train_file = SPLITS_DIR / "train.jsonl"
-    test_file = SPLITS_DIR / "test.jsonl"
-    val_file = SPLITS_DIR / "validation.jsonl"
-    
-    def count_cases(file_path):
-        if not file_path.exists(): return 0
-        try:
-            with open(file_path, "r") as f:
-                return sum(1 for _ in f)
-        except Exception:
-            return 0
-            
-    train_cases = count_cases(train_file)
-    test_cases = count_cases(test_file)
-    val_cases = count_cases(val_file)
-    total_cases = train_cases + test_cases + val_cases
-    dataset_status = "PASS" if total_cases > 0 else "FAIL"
-    
-    # 2. Models
+    # 1. Configuration check
     try:
-        import ollama
-        models = ollama.list().models
-        model_count = len(models)
+        DriftGuardConfig.load()
+        config_status = "✅ Valid (.driftguard.yml)"
     except Exception:
-        model_count = 0
+        config_status = "⚠️ Default Fallback"
         
-    # 3. Experiments
-    from pathlib import Path
-    runner = ExperimentRunner(Path("results/experiments"))
-    exps = runner.get_experiments()
-    completed = [e for e in exps if e.f1_score is not None]
-    failed = [e for e in exps if e.f1_score is None]
+    # 2. Model gateway
+    gateway_host = config.OMNIROUTE_HOST
+    gateway_status = f"Connected ({gateway_host})"
     
-    total_evals = sum(e.total_cases_analyzed for e in exps)
-    
+    # 3. Artifact count
+    if st.session_state.get('repo_info'):
+        parsed_count = len(st.session_state.repo_info.artifacts)
+        candidates_count = len(st.session_state.repo_info.drift_candidates)
+    else:
+        parsed_count = 0
+        candidates_count = 0
+        
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.markdown(f"**Dataset Loaded**: `{dataset_status}`")
-        st.markdown(f"**Cases Found**: `{total_cases}`")
-        st.markdown(f"**Models Available**: `{model_count}`")
+        st.markdown(f"**Policy Config**: `{config_status}`")
+        st.markdown(f"**Model Gateway**: `{gateway_status}`")
     with c2:
-        st.markdown(f"**Experiments Found**: `{len(exps)}`")
-        st.markdown(f"**Completed Results**: `{len(completed)}`")
-        st.markdown(f"**Failed/Empty Results**: `{len(failed)}`")
+        st.markdown(f"**Default Model**: `{config.DEFAULT_MODEL}`")
+        st.markdown(f"**Fallback Host**: `{config.OLLAMA_HOST}`")
     with c3:
-        st.markdown(f"**Evaluation Cases Run**: `{total_evals}`")
-        if st.session_state.get('repo_info'):
-            st.markdown(f"**Artifacts Parsed**: `{len(st.session_state.repo_info.artifacts)}`")
-        else:
-            st.markdown(f"**Artifacts Parsed**: `N/A`")
+        st.markdown(f"**Artifacts Parsed**: `{parsed_count}`")
+        st.markdown(f"**Candidates Generated**: `{candidates_count}`")
             
     st.markdown("---")
 

@@ -4,7 +4,7 @@ Sentence-transformers wrapper for generating embeddings.
 """
 
 import logging
-from typing import List, Optional
+from typing import List
 
 logger = logging.getLogger(__name__)
 

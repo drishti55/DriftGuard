@@ -5,7 +5,6 @@ Wrapper around Ollama for local LLM inference with retry logic and structured ou
 
 import time
 import logging
-from typing import Optional
 
 import ollama as ollama_client
 

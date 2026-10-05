@@ -1,4 +1,3 @@
-import re
 from urllib.parse import urlparse
 
 def normalize_repository_name(repo_str: str) -> str:

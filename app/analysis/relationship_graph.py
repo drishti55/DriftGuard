@@ -5,8 +5,6 @@ imports, tests, API routes, configurations, documentation mentions, and deployme
 Generates genuine drift candidates without arbitrary cartesian explosion or truncation.
 """
 
-import os
-import re
 import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Set, Optional
@@ -119,7 +117,6 @@ class RelationshipGraph:
         """Match tests to their corresponding implementation files deterministically."""
         tests = self._artifacts_by_category.get("test", [])
         sources = self._artifacts_by_category.get("source_code", [])
-        source_paths = {s.path: s for s in sources}
         source_by_stem = {Path(s.path).stem.lower(): s for s in sources}
 
         for t in tests:
@@ -218,7 +215,6 @@ class RelationshipGraph:
 
         for d in docs:
             d_info: Optional[ExtractedInfo] = getattr(d, "extracted_info", None)
-            d_name = Path(d.path).name.lower()
 
             # Root README connects to primary entrypoints and primary deployment configuration
             if d.path.lower() in ('readme.md', 'readme.rst', 'readme'):

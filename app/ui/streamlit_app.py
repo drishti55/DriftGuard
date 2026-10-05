@@ -1,7 +1,6 @@
 import streamlit as st
 import sys
 import os
-import time
 import tempfile
 import pandas as pd
 from pathlib import Path

@@ -910,13 +910,13 @@ Observability is maintained at both the system and agent levels:
 - [x] Comprehensive `PLAN.md` drafted and approved
 
 ### Phase 1 — Repository Transition, Architectural Reconditioning & Foundation
-- [ ] Decouple codebase from legacy dataset snapshot paths (`driftguard-dataset/`), establishing a universal, live git-workspace ingestion interface.
-- [ ] Recondition repository structure into the modular agentic layout (`app/agents/`, `app/intelligence/`, `app/sandbox/`, `app/actuation/`).
-- [ ] Implement `GitDeltaScanner` extracting incremental changed files, hunks, and commit ranges from active/targeted branches.
-- [ ] Implement `StackDetector` for autonomous framework and build-pipeline discovery (Next.js, FastAPI, Rust, Go).
-- [ ] Implement `.driftguard.yml` declarative configuration parser and Pydantic schema validator.
-- [ ] Establish the foundational unified CLI (`driftguard analyze --branch <name>`) operating on live repository workspaces.
-- [ ] Re-align FastAPI backend and Vite frontend to interface with dynamic workspace branches instead of static dataset paths.
+- [x] Decouple codebase from legacy dataset snapshot paths (`driftguard-dataset/`), establishing a universal, live git-workspace ingestion interface.
+- [x] Recondition repository structure into the modular agentic layout (`app/agents/`, `app/intelligence/`, `app/sandbox/`, `app/actuation/`).
+- [x] Implement `GitDeltaScanner` extracting incremental changed files, hunks, and commit ranges from active/targeted branches.
+- [x] Implement `StackDetector` for autonomous framework and build-pipeline discovery (Next.js, FastAPI, Rust, Go).
+- [x] Implement `.driftguard.yml` declarative configuration parser and Pydantic schema validator.
+- [x] Establish the foundational unified CLI (`driftguard analyze --branch <name>`) operating on live repository workspaces.
+- [x] Re-align FastAPI backend and Vite frontend to interface with dynamic workspace branches instead of static dataset paths.
 
 ### Phase 2 — Tree-sitter & Open-Source SCIP Integration & Enhanced Drift Auditor
 - [ ] Integrate **Tree-sitter** Python bindings across target grammars (Python, TypeScript, Go).
@@ -1119,13 +1119,13 @@ DriftGuard_Repo/
 ## 42. Definition of Done
 
 ### Phase 1 — Repository Transition, Architectural Reconditioning & Foundation
-- [ ] Decouple codebase from legacy dataset snapshot paths (`driftguard-dataset/`), enabling dynamic live-workspace analysis
-- [ ] Recondition directory structure to modular agentic architecture (`app/agents/`, `app/intelligence/`, `app/sandbox/`, `app/actuation/`)
-- [ ] Git delta scanner operational on active/targeted branch commits (`GitDeltaScanner`)
-- [ ] Autonomous stack detector identifying Next.js, Python, Rust, and Go frameworks (`StackDetector`)
-- [ ] `.driftguard.yml` declarative parser and Pydantic schema validator passing all test fixtures
-- [ ] Foundational local CLI command (`driftguard analyze --branch <name>`) operational on live repositories
-- [ ] FastAPI backend and Vite frontend re-wired to support live workspace branch analysis
+- [x] Decouple codebase from legacy dataset snapshot paths (`driftguard-dataset/`), enabling dynamic live-workspace analysis
+- [x] Recondition directory structure to modular agentic architecture (`app/agents/`, `app/intelligence/`, `app/sandbox/`, `app/actuation/`)
+- [x] Git delta scanner operational on active/targeted branch commits (`GitDeltaScanner`)
+- [x] Autonomous stack detector identifying Next.js, Python, Rust, and Go frameworks (`StackDetector`)
+- [x] `.driftguard.yml` declarative parser and Pydantic schema validator passing all test fixtures
+- [x] Foundational local CLI command (`driftguard analyze --branch <name>`) operational on live repositories
+- [x] FastAPI backend and Vite frontend re-wired to support live workspace branch analysis
 
 ### Phase 2 — Tree-sitter & Open-Source SCIP Grounded Auditor
 - [ ] Tree-sitter Python bindings integrated across target languages (Python, TypeScript, Go)
