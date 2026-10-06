@@ -1,0 +1,23 @@
+{
+  "experiment_id": "smoke-test-20260929-144407",
+  "repository": "etcd-io/etcd",
+  "commit": null,
+  "model": "qwen2.5-coder:7b",
+  "prompt_version": "baseline_v1",
+  "temperature": 0.0,
+  "max_tokens": 1024,
+  "rag_mode": "Non-RAG",
+  "chunking_strategy": "AST-aware",
+  "chunk_size": 512,
+  "overlap": 64,
+  "embedding_model": "all-MiniLM-L6-v2",
+  "retrieval_strategy": "Dense Embedding",
+  "top_k": 5,
+  "dataset_split": "Test",
+  "max_cases": 3,
+  "debug_sample_mode": true,
+  "enable_evidence_verification": true,
+  "enable_fix_validation": false,
+  "description": "Automated Smoke Test Verification",
+  "timestamp": "2026-09-29T14:44:07.932450"
+}

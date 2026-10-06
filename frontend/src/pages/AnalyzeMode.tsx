@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Play, FileText, CheckCircle2, AlertTriangle, AlertCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Play, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import './AnalyzeMode.css';
 
 interface AnalyzeModeProps {
-  repository: string;
+  repository: string | null;
 }
 
 export default function AnalyzeMode({ repository }: AnalyzeModeProps) {
@@ -12,6 +12,10 @@ export default function AnalyzeMode({ repository }: AnalyzeModeProps) {
   const [error, setError] = useState<string | null>(null);
 
   const runAnalysis = async () => {
+    if (!repository) {
+      setError('No repository selected.');
+      return;
+    }
     setAnalyzing(true);
     setError(null);
     try {

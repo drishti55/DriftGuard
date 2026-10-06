@@ -1,0 +1,49 @@
+# ==============================================================================
+# DriftGuard - How to Run
+# ==============================================================================
+
+# 1. Activate Virtual Environment (if not already activated)
+source .venv/bin/activate
+
+# 2. Check Ollama & Download Model (Already installed & running)
+ollama list
+# Primary model: qwen2.5-coder:7b (already downloaded)
+
+# ------------------------------------------------------------------------------
+# OPTION A: Launch Streamlit Web UI (Interactive Dashboard)
+# ------------------------------------------------------------------------------
+streamlit run app/ui/streamlit_app.py
+# Or via main CLI:
+python app/main.py ui
+
+# ------------------------------------------------------------------------------
+# OPTION B: Analyze a Repository (CLI)
+# ------------------------------------------------------------------------------
+# List all 480+ local cloned repositories:
+python app/main.py list
+
+# Run analysis on a repository (e.g. tiangolo/fastapi or gin-gonic/gin):
+python scripts/run_analysis.py tiangolo/fastapi --max-pairs 5
+
+# Or via unified CLI:
+python app/main.py analyze tiangolo/fastapi --max-candidates 5
+
+# Save results to a file:
+python scripts/run_analysis.py gin-gonic/gin --output results/analysis_gin.json
+
+# ------------------------------------------------------------------------------
+# OPTION C: Run Evaluations / Benchmarks
+# ------------------------------------------------------------------------------
+# Baseline evaluation (e.g. sample of 10 or 50 cases):
+python scripts/run_evaluation.py --mode baseline --sample-size 10
+
+# RAG-enhanced evaluation:
+python scripts/run_evaluation.py --mode rag --sample-size 10
+
+# Run both and compare:
+python scripts/run_evaluation.py --mode both --sample-size 10
+
+# ------------------------------------------------------------------------------
+# OPTION D: Run Smoke Test
+# ------------------------------------------------------------------------------
+python scripts/smoke_test.py

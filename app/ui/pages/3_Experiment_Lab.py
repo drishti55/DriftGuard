@@ -32,11 +32,12 @@ with col1:
         repo_name = "all"
         
     dataset_split = st.selectbox("Dataset Evaluation Split", ["Test", "Validation", "Train", "Runtime (Workspace)"])
-    max_cases = st.number_input("Max Cases (0 = All)", 0, 5000, 100)
+    debug_sample_mode = st.checkbox("Smoke Test (Debug Mode)", value=False, help="Run a quick smoke test on 5 cases. Excluded from official metrics.")
 
 with col2:
     st.subheader("Model & Pipeline")
-    model = st.selectbox("LLM Model", ["qwen2.5-coder:7b", "codellama:7b", "starcoder2:3b", "gemma2:9b"])
+    from app.config import SUPPORTED_MODELS
+    model = st.selectbox("LLM Model", SUPPORTED_MODELS)
     
     rag_mode = st.radio("Analysis Mode", ["Non-RAG", "RAG", "Hybrid"])
     
@@ -62,7 +63,7 @@ if st.button("🚀 RUN EXPERIMENT", type="primary", use_container_width=True):
         retrieval_strategy=retrieval_strategy,
         top_k=top_k,
         dataset_split=dataset_split,
-        max_cases=max_cases,
+        debug_sample_mode=debug_sample_mode,
         enable_evidence_verification=verify_evidence
     )
     
@@ -82,34 +83,14 @@ if st.button("🚀 RUN EXPERIMENT", type="primary", use_container_width=True):
                 info = st.session_state.repo_info
                 repo = st.session_state.ingested_repo
                 
-                from collections import defaultdict
-                by_type = defaultdict(list)
-                for a in info.artifacts:
-                    by_type[a.artifact_type].append(a)
-
-                pair_rules = [
-                    ("dependency", "source_code"),
-                    ("test", "source_code"),
-                    ("documentation", "source_code"),
-                    ("api_specification", "source_code"),
-                    ("ci_configuration", "source_code"),
-                    ("docker_configuration", "dependency"),
-                    ("docker_configuration", "source_code"),
-                    ("build_configuration", "source_code"),
-                ]
-
-                i = 0
-                for type_a, type_b in pair_rules:
-                    for a1 in by_type.get(type_a, []):
-                        for a2 in by_type.get(type_b, []):
-                            cases_override.append({
-                                "case_id": f"runtime-{i}",
-                                "repository": repo.original_source,
-                                "commit_sha": info.commit_sha,
-                                "artifact_1": {"path": a1.path, "type": a1.artifact_type},
-                                "artifact_2": {"path": a2.path, "type": a2.artifact_type},
-                            })
-                            i += 1
+                for cand in info.drift_candidates:
+                    cases_override.append({
+                        "case_id": cand.get("case_id"),
+                        "repository": repo.original_source,
+                        "commit_sha": info.commit_sha,
+                        "artifact_1": {"path": cand["artifact_1"]["path"], "type": cand["artifact_1"]["type"]},
+                        "artifact_2": {"path": cand["artifact_2"]["path"], "type": cand["artifact_2"]["type"]},
+                    })
             if not cases_override:
                 st.warning("No related artifact pairs found to check in the workspace.")
                 st.stop()
@@ -127,8 +108,8 @@ if st.button("🚀 RUN EXPERIMENT", type="primary", use_container_width=True):
             st.success(f"Experiment {exp_id} completed successfully!")
             
             c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Macro F1", f"{result.macro_f1:.3f}")
-            c2.metric("Precision", f"{result.precision:.3f}")
-            c3.metric("Recall", f"{result.recall:.3f}")
+            c1.metric("Macro F1", f"{result.macro_f1:.3f}" if result.macro_f1 is not None else "N/A")
+            c2.metric("Precision", f"{result.precision:.3f}" if result.precision is not None else "N/A")
+            c3.metric("Recall", f"{result.recall:.3f}" if result.recall is not None else "N/A")
             c4.metric("Avg Latency", f"{result.avg_latency_s:.1f}s")
 

@@ -80,7 +80,8 @@ def render_analysis_configuration():
     st.header("Analysis Configuration")
     c1, c2 = st.columns(2)
     with c1:
-        model = st.selectbox("Reasoning Model", ["qwen2.5-coder:7b", "codellama:7b", "starcoder2:3b", "gemma2:9b"])
+        from app.config import SUPPORTED_MODELS
+        model = st.selectbox("Reasoning Model", SUPPORTED_MODELS)
     with c2:
         # candidate count from scan_metrics; fallback to drift_candidates list length
         sm = getattr(info, 'scan_metrics', {}) or {}
@@ -186,7 +187,7 @@ def render_file_analysis_view():
         filtered = [a for a in filtered if getattr(a, 'artifact_category', getattr(a, 'artifact_type', 'other')) == cat_filter]
 
     data = []
-    for a in filtered[:200]:
+    for a in filtered:
         data.append({
             "Path": a.path,
             "Category": getattr(a, 'artifact_category', getattr(a, 'artifact_type', 'other')),

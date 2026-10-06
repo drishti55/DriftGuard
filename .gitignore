@@ -38,6 +38,7 @@ env/
 
 # Local Database & Vector Storage
 .chroma_db/
+.chroma_db*/
 
 # Large Datasets (115GB local dataset)
 driftguard-dataset/
