@@ -67,7 +67,15 @@ Examples:
     audit_parser.add_argument("--model", type=str, default=None, help="OmniRoute model override")
     audit_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
 
-    # 6. UI Command
+    # 6. Repair Command (Phase 3 sandboxed self-healing)
+    repair_parser = subparsers.add_parser("repair", help="Generate and verify sandboxed repairs for confirmed drift")
+    repair_parser.add_argument("--workspace", type=str, default=".", help="Target workspace path")
+    repair_parser.add_argument("--base", type=str, default=None, help="Base branch or commit reference")
+    repair_parser.add_argument("--branch", type=str, default=None, help="Target branch name")
+    repair_parser.add_argument("--max", type=int, default=None, help="Maximum repair attempts")
+    repair_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+
+    # 7. UI Command
     subparsers.add_parser("ui", help="Launch Streamlit management interface")
 
     # 6. Legacy Analyze (maintained for dataset backwards-compatibility)
@@ -176,6 +184,18 @@ Examples:
                 else:
                     print("\n  ✅ Zero ungrounded drifts detected across evaluated candidates.")
             print("=" * 60 + "\n")
+
+    elif args.command == "repair":
+        coord = CoordinatorAgent(workspace_path=Path(args.workspace))
+        audited = coord.run_drift_audit(base_branch=args.base, target_branch=args.branch)
+        drifts = audited.audit_report.confirmed_drifts if audited.audit_report else []
+        state = coord.run_repair_workflow(drifts, max_attempts=args.max)
+        if args.json:
+            print(json.dumps(state.to_dict(), indent=2))
+        else:
+            print(f"Repair status: {state.repair_status}")
+            if state.repair_report:
+                print(f"Attempts: {len(state.repair_report.attempts)}")
 
     elif args.command == "ui":
         import subprocess

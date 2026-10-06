@@ -21,6 +21,10 @@ Grounded Drift Auditor (DriftAuditorAgent via OmniRoute Gateway)
        ↓
 Mathematical Verbatim Invariant Verification (EvidenceVerifier)
        ↓
+Sandboxed Repair Engineer (Docker/local fallback + Kubernetes Job manifests)
+       ↓
+Compiler Reflection Loop (bounded by .driftguard.yml)
+       ↓
 CLI & Multi-Page Dashboard & FastAPI Server
 ```
 
@@ -48,7 +52,26 @@ cp .env.example .env
 ### Running Tests
 ```bash
 uv run pytest
+uvx ruff check --select F401,F841 app/ tests/
 ```
+
+---
+
+## 🔧 Sandboxed Repair
+
+Phase 3 verifies proposed fixes without modifying the host workspace. A temporary
+copy receives the unified diff, then configured build and test commands run with
+bounded timeouts. Docker is used when available; local isolated execution is the
+safe fallback when Docker is unavailable. Kubernetes support generates a
+non-root `batch/v1` Job manifest for cloud CI.
+
+```bash
+# Audit the current delta, generate a patch, and verify it in a sandbox
+uv run driftguard repair --workspace . --max 3 --json
+```
+
+Repairs stop after `repair.max_attempts` from `.driftguard.yml`. Phase 3 does not
+commit changes, push branches, or open pull requests.
 
 ---
 
@@ -72,7 +95,10 @@ uv run driftguard perceive --base HEAD~1
 # 5. Validate repository configuration
 uv run driftguard config --show
 
-# 6. Launch the Streamlit multi-page management dashboard
+# 6. Generate and verify a bounded sandboxed repair
+uv run driftguard repair --max 3 --json
+
+# 7. Launch the Streamlit multi-page management dashboard
 uv run driftguard ui
 ```
 
@@ -87,7 +113,9 @@ DriftGuard_Repo/
 │   │   ├── coordinator.py       # Root coordinator agent
 │   │   ├── delta_scanner.py     # Git diff & hunk perception
 │   │   ├── stack_detector.py    # Polyglot stack & build matrix detection
-│   │   └── drift_auditor.py     # Grounded drift auditor agent
+│   │   ├── drift_auditor.py     # Grounded drift auditor agent
+│   │   ├── repair_engineer.py   # Sandboxed unified-diff repair agent
+│   │   └── reflection_agent.py  # Compiler/test feedback and bounded retries
 │   ├── analysis/                # Drift detection & evidence validation
 │   │   ├── drift_detector.py    # Baseline LLM drift detector
 │   │   ├── drift_pipeline.py    # End-to-end analysis pipeline
@@ -108,6 +136,10 @@ DriftGuard_Repo/
 │   │   ├── repository_ingestor.py # Git & archive workspace ingestion
 │   │   ├── artifact_extractor.py# Structural regex extractor
 │   │   └── file_classifier.py   # Multi-language file classification
+│   ├── sandbox/                  # Isolated local/Docker execution and K8s manifests
+│   │   ├── base.py               # Sandbox runner contract and execution result
+│   │   ├── docker_runner.py      # Docker runner with local fallback
+│   │   └── k8s_runner.py         # Kubernetes Job manifest generator
 │   ├── intelligence/            # Multi-language code intelligence
 │   │   ├── treesitter_parser.py # Universal AST engine (Python ast + TS/JS/Go Tree-sitter)
 │   │   └── scip_indexer.py      # Cross-file SCIP symbol definition & reference graph
@@ -137,6 +169,8 @@ DriftGuard_Repo/
 │   ├── test_api.py              # FastAPI endpoints tests
 │   ├── test_code_intelligence.py# Tree-sitter & SCIP indexer tests
 │   ├── test_drift_auditor.py    # DriftAuditorAgent & verbatim invariant tests
+│   ├── test_sandbox.py          # Isolated execution, patching, timeout, cleanup
+│   ├── test_repair_reflection.py # Utility scoring and bounded retry tests
 │   └── test_perception_and_config.py # Stack detection, delta scanner & config tests
 │
 ├── pyproject.toml               # Modern PEP 621 dependencies & scripts

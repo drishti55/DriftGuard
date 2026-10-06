@@ -919,18 +919,19 @@ Observability is maintained at both the system and agent levels:
 - [x] Re-align FastAPI backend and Vite frontend to interface with dynamic workspace branches instead of static dataset paths.
 
 ### Phase 2 — Tree-sitter & Open-Source SCIP Integration & Enhanced Drift Auditor
-- [ ] Integrate **Tree-sitter** Python bindings across target grammars (Python, TypeScript, Go).
-- [ ] Integrate **Sourcegraph SCIP** local CLI indexers for cross-file symbol reference mapping (100% free open-source).
-- [ ] Upgrade `DriftAuditorAgent` to query Tree-sitter AST nodes before prompting LLM.
-- [ ] Enforce verbatim quote anti-hallucination verification invariant.
-- [ ] Connect agent model calls through local **OmniRoute** gateway (`http://localhost:20128`).
+- [x] Integrate **Tree-sitter** Python bindings across target grammars (Python, TypeScript, Go) with robust AST fallback handling.
+- [x] Integrate **Sourcegraph SCIP** local CLI indexers with in-process AST symbol definition and cross-file reference graph mapping.
+- [x] Upgrade `DriftAuditorAgent` to query Tree-sitter AST nodes and cross-file symbol impacts before prompting LLM.
+- [x] Enforce verbatim quote anti-hallucination verification invariant ($F_1 \sqsubseteq C_1 \land F_2 \sqsubseteq C_2$) discarding ungrounded claims.
+- [x] Connect agent model calls through local **OmniRoute** gateway (`http://localhost:20128`) with OpenAI-compatible payload and local fallbacks.
 
 ### Phase 3 — Docker & Kubernetes Ephemeral Sandboxed Self-Healing Engine
-- [ ] Implement Docker sandbox runner (`app/sandbox/docker_runner.py`) with resource limits.
-- [ ] Implement Kubernetes ephemeral Job runner (`app/sandbox/k8s_runner.py`) for cloud CI.
-- [ ] Implement `SandboxedRepairEngineer` generating surgical unified diffs.
-- [ ] Implement compiler error ingestion and reflection loop honoring `max_attempts`.
-- [ ] Unit test sandbox execution across Python (`pytest`) and Next.js (`npm run build`).
+- [x] Implement Docker sandbox runner (`app/sandbox/docker_runner.py`) with CPU, memory, timeout, network, non-root, and local fallback controls.
+- [x] Implement Kubernetes ephemeral Job manifest generator (`app/sandbox/k8s_runner.py`) with non-root security, deadlines, and resource limits.
+- [x] Implement `SandboxedRepairEngineer` generating and validating surgical unified diffs.
+- [x] Implement compiler error ingestion and bounded reflection loop honoring `max_attempts`.
+- [x] Add sandbox and reflection unit tests covering isolated execution, patching, timeouts, utility scoring, and retry termination.
+- [x] Add coordinator repair workflow and `driftguard repair` CLI command without automatic commits or PR actuation.
 
 ### Phase 4 — GitHub Actions Workflow & PR Actuator with Reviewer Trace HUD
 - [ ] Implement GitHub API PR creator (`app/actuation/github_pr.py`) with branch committer.
@@ -1128,16 +1129,16 @@ DriftGuard_Repo/
 - [x] FastAPI backend and Vite frontend re-wired to support live workspace branch analysis
 
 ### Phase 2 — Tree-sitter & Open-Source SCIP Grounded Auditor
-- [ ] Tree-sitter Python bindings integrated across target languages (Python, TypeScript, Go)
-- [ ] Local SCIP open-source CLI indexers integrated for cross-file symbol resolution
-- [ ] Verbatim substring verification invariant passing unit test assertions
-- [ ] OmniRoute gateway integrated and routing prompt calls
+- [x] Tree-sitter Python bindings integrated across target languages (Python, TypeScript, Go)
+- [x] Local SCIP open-source CLI indexers integrated for cross-file symbol resolution
+- [x] Verbatim substring verification invariant passing unit test assertions
+- [x] OmniRoute gateway integrated and routing prompt calls
 
 ### Phase 3 — Docker & Kubernetes Sandboxed Self-Healing
-- [ ] Ephemeral Docker sandbox executing clean builds with resource governance
-- [ ] Ephemeral Kubernetes Job runner operational for cloud CI execution
-- [ ] Iterative compiler feedback loop repairing broken builds up to `max_attempts`
-- [ ] Zero environment leakage verified across test runs
+- [x] Ephemeral Docker/local fallback sandbox executing isolated commands with resource governance
+- [x] Declarative Kubernetes Job runner operational for cloud CI manifests
+- [x] Iterative compiler feedback loop repairing broken builds up to `max_attempts`
+- [x] Zero host-workspace mutation verified across sandbox tests
 
 ### Phase 4 — GitHub Actions Workflow & PR Actuator
 - [ ] Automated branch creation and surgical git commit manager operational

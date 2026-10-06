@@ -12,7 +12,10 @@ from typing import Dict, List, Optional
 from app.config_schema import DriftGuardConfig
 from app.agents.delta_scanner import GitDeltaScanner, GitDeltaReport
 from app.agents.stack_detector import StackDetector, StackReport
-from app.agents.drift_auditor import DriftAuditorAgent, DriftAuditReport
+from app.agents.drift_auditor import DriftAuditorAgent, DriftAuditReport, ConfirmedDrift
+from app.agents.reflection_agent import CompilerReflectionAgent, RepairReport
+from app.agents.repair_engineer import SandboxedRepairEngineer
+from app.sandbox import get_sandbox_runner
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,8 @@ class CoordinatorSessionState:
     audit_report: Optional[DriftAuditReport] = None
     audit_status: str = "INITIALIZED"  # 'INITIALIZED', 'SKIPPED', 'READY_FOR_AUDIT', 'AUDIT_COMPLETED'
     messages: List[str] = field(default_factory=list)
+    repair_report: Optional[RepairReport] = None
+    repair_status: str = "NOT_STARTED"
 
     def to_dict(self) -> Dict:
         res = {
@@ -43,9 +48,12 @@ class CoordinatorSessionState:
                 k: v.model_dump() for k, v in self.stack_report.effective_build_matrix.items()
             },
             "messages": self.messages,
+            "repair_status": self.repair_status,
         }
         if self.audit_report:
             res["audit_report"] = self.audit_report.to_dict()
+        if self.repair_report:
+            res["repair_report"] = self.repair_report.to_dict()
         return res
 
 
@@ -133,3 +141,38 @@ class CoordinatorAgent:
         )
         return state
 
+
+    def run_repair_workflow(
+        self,
+        confirmed_drifts: List[ConfirmedDrift],
+        max_attempts: Optional[int] = None,
+    ) -> CoordinatorSessionState:
+        state = self.run_initial_perception()
+        if state.audit_status == "SKIPPED":
+            state.repair_status = "SKIPPED"
+            return state
+        if not confirmed_drifts:
+            state.repair_status = "NO_DRIFT"
+            return state
+        if not self.config.repair.enabled:
+            state.repair_status = "DISABLED"
+            return state
+
+        runner = get_sandbox_runner(self.workspace_path, self.config)
+        engineer = SandboxedRepairEngineer(self.workspace_path)
+        reflection = CompilerReflectionAgent(max_attempts or self.config.repair.max_attempts)
+        drift = confirmed_drifts[0]
+
+        def generate_and_execute(context: str):
+            candidate, results = engineer.apply_and_validate(
+                drift, runner, state.stack_report.effective_build_matrix, context
+            )
+            return candidate.patch, results
+
+        state.repair_status = "IN_PROGRESS"
+        try:
+            state.repair_report = reflection.run(generate_and_execute)
+            state.repair_status = "VERIFIED" if state.repair_report.verified else "FAILED"
+        finally:
+            runner.cleanup()
+        return state
