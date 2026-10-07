@@ -64,3 +64,16 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Frontend dependencies & build outputs
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# AIDevOps Sandbox & Code Intelligence Indices
+.driftguard_sandbox/
+*.scip
+index.scip
+
+# Graphify Knowledge Graph & Cache
+graphify-out/

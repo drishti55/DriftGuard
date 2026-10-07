@@ -13,7 +13,6 @@ Nothing else. No partial, unverified, or rejected states.
 import re
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 from app.analysis.output_validator import DriftPrediction
 

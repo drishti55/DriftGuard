@@ -4,10 +4,9 @@ Rule-based file type classification into artifact categories.
 Includes explicit filters for vendor, generated, cache, and binary content.
 """
 
-import os
 import re
 from pathlib import Path
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, Tuple
 
 # Directories that are generated, vendored, or cache artifacts
 IGNORED_DIR_NAMES = {

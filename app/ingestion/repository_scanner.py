@@ -9,7 +9,7 @@ import os
 import json
 import hashlib
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import List, Tuple
 from collections import Counter
 import logging
 
@@ -17,7 +17,7 @@ from app.ingestion.repository_ingestor import IngestedRepository
 from app.ingestion.repository_loader import RepoInfo, RepoArtifact
 from app.ingestion.file_classifier import (
     classify_file, is_ignored_path, get_file_type_description,
-    IGNORED_DIR_NAMES, IGNORED_BINARY_EXTENSIONS, IGNORED_MINIFIED_PATTERNS
+    IGNORED_BINARY_EXTENSIONS
 )
 from app.ingestion.artifact_extractor import extract_info
 from app.analysis.relationship_graph import RelationshipGraph

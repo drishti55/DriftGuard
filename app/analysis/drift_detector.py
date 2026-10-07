@@ -8,8 +8,8 @@ Supports both baseline (direct prompting) and RAG-enhanced modes.
 import json
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict
-from dataclasses import dataclass, field, asdict
+from typing import Optional, List
+from dataclasses import dataclass
 
 from app import config
 from app.analysis.llm_client import LLMClient
@@ -93,31 +93,18 @@ class DriftDetector:
                            commit_sha: str = None) -> Optional[Path]:
         """
         Resolve a file path to an actual file on disk.
-        Tries: snapshot dir (commit-specific) → repo dir → direct path.
+        Tries: direct path -> workspace path -> project root.
         """
-        clone_data = self._load_clone_data()
-
-        # Try snapshot first (commit-specific)
-        if commit_sha and repository in clone_data:
-            repo_info = clone_data[repository]
-            for snapshot in repo_info.get("snapshots", []):
-                if snapshot.get("commit_sha", "").startswith(commit_sha[:8]):
-                    snapshot_path = Path(snapshot["path"]) / file_path
-                    if snapshot_path.exists():
-                        return snapshot_path
-
-        # Try the repo directory
-        repo_dir_name = repository.replace("/", "_")
-        repo_path = config.REPOS_DIR / repo_dir_name / file_path
-        if repo_path.exists():
-            return repo_path
-
-        # Try snapshots directory with partial commit match
-        if commit_sha:
-            snapshot_dir_name = f"{repo_dir_name}_{commit_sha[:8]}"
-            snapshot_path = config.SNAPSHOTS_DIR / snapshot_dir_name / file_path
-            if snapshot_path.exists():
-                return snapshot_path
+        direct = Path(file_path)
+        if direct.exists():
+            return direct
+        if repository:
+            repo_direct = Path(repository) / file_path
+            if repo_direct.exists():
+                return repo_direct
+        project_rel = config.PROJECT_ROOT / file_path
+        if project_rel.exists():
+            return project_rel
 
         return None
 

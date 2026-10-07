@@ -1,7 +1,6 @@
 import streamlit as st
 import sys
 import os
-import time
 import tempfile
 import pandas as pd
 from pathlib import Path
@@ -454,7 +453,7 @@ def render_file_analysis_view():
             "Category": getattr(a, 'artifact_category', getattr(a, 'artifact_type', 'other')),
             "Type": getattr(a, 'file_type', getattr(a, 'artifact_type', 'other')),
             "Language": getattr(a, 'language', "-") or "-",
-            "Lines": getattr(a, 'line_count', "-") if getattr(a, 'status', 'RELEVANT') == "RELEVANT" else "-",
+            "Lines": str(getattr(a, 'line_count', "-")) if getattr(a, 'status', 'RELEVANT') == "RELEVANT" else "-",
             "Size (KB)": round(getattr(a, 'file_size', getattr(a, 'size_bytes', 0)) / 1024, 1),
             "Status": getattr(a, 'status', 'RELEVANT'),
             "Relationships": getattr(a, 'relationships_count', 0),

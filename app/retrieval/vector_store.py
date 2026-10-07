@@ -4,7 +4,7 @@ ChromaDB-based vector store for indexing and searching repository artifacts.
 """
 
 import logging
-from typing import List, Dict, Optional
+from typing import List
 from pathlib import Path
 
 import chromadb

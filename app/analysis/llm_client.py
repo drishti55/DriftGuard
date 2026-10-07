@@ -5,8 +5,8 @@ Wrapper around Ollama for local LLM inference with retry logic and structured ou
 
 import time
 import logging
-from typing import Optional
 
+import httpx
 import ollama as ollama_client
 
 from app.analysis.output_validator import validate_output, ParseResult
@@ -16,14 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 class LLMClient:
-    """Client for local LLM inference via Ollama."""
+    """Client for LLM inference via OmniRoute with local Ollama fallback."""
 
     def __init__(self, model: str = None, fallback_model: str = None,
-                 timeout: int = None, host: str = None):
-        self.model = model or config.OLLAMA_MODEL
+                 timeout: int = None, host: str = None,
+                 omniroute_host: str = None, omniroute_api_key: str = None):
+        self.model = model or config.DEFAULT_MODEL or config.OLLAMA_MODEL
         self.fallback_model = fallback_model or config.OLLAMA_FALLBACK_MODEL
         self.timeout = timeout or config.OLLAMA_TIMEOUT
         self.host = host or config.OLLAMA_HOST
+        self.omniroute_host = omniroute_host or config.OMNIROUTE_HOST
+        self.omniroute_api_key = omniroute_api_key or config.OMNIROUTE_API_KEY
 
         # Track statistics
         self.stats = {
@@ -36,7 +39,10 @@ class LLMClient:
         }
 
         # Initialize Ollama client
-        self.client = ollama_client.Client(host=self.host)
+        try:
+            self.client = ollama_client.Client(host=self.host)
+        except Exception:
+            self.client = None
 
     def check_model_available(self, model_name: str) -> bool:
         """Check if a model is available in Ollama."""
@@ -66,6 +72,39 @@ class LLMClient:
         """
         target_model = model or self.model
         self.stats["total_calls"] += 1
+
+        # 1. Try OmniRoute Gateway First
+        if self.omniroute_host:
+            try:
+                start_time = time.time()
+                endpoint = f"{self.omniroute_host.rstrip('/')}/chat/completions"
+                headers = {"Content-Type": "application/json"}
+                if self.omniroute_api_key:
+                    headers["Authorization"] = f"Bearer {self.omniroute_api_key}"
+
+                payload = {
+                    "model": target_model,
+                    "messages": [
+                        {"role": "system", "content": "You are DriftGuard Auditor. Output strictly valid JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.0,
+                }
+                with httpx.Client(timeout=float(self.timeout or 60)) as http_client:
+                    res = http_client.post(endpoint, json=payload, headers=headers)
+                    if res.status_code == 200:
+                        content = res.json()["choices"][0]["message"]["content"]
+                        result = validate_output(content)
+                        if result.success:
+                            self.stats["successful_parses"] += 1
+                            self.stats["total_latency_s"] += (time.time() - start_time)
+                            return result
+            except Exception as e:
+                logger.debug(f"OmniRoute gateway call failed: {e}. Falling back to Ollama.")
+
+        # 2. Local Ollama Fallback
+        if not self.client:
+            return ParseResult(raw_output="", error="OmniRoute failed and local Ollama client is unavailable")
 
         for attempt in range(max_retries + 1):
             try:
