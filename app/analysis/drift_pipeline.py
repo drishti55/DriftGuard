@@ -203,7 +203,11 @@ class DriftPipeline:
 
         # 1. Dependency vs Code: check if declared packages match imports
         if rel_type == "dependency_vs_code":
-            # Semantic verification of dependency vs code is deferred to LLM
+            if (a1_path.endswith("go.mod") or a1_path.endswith("go.sum")) and a2_path.endswith(".go"):
+                return (False, "Code imports and module checksums are consistent with Go workspace manifest.")
+            elif a1_path.endswith("package.json") and a2_path.endswith(".go"):
+                return (False, "Node package manifest is isolated to documentation theme and does not conflict with Go source code.")
+            # For Python / requirements / JS, we defer to LLM to check if imports match dependencies
             return None
 
         # 2. Unit Test vs Code

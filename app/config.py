@@ -44,15 +44,6 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
 OLLAMA_FALLBACK_MODEL = os.getenv("OLLAMA_FALLBACK_MODEL", "codellama:7b")
 OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "120"))
 
-SUPPORTED_MODELS = [
-    "qwen2.5-coder:7b",
-    "starcoder2:3b",
-    "deepseek-coder-v2:16b",
-    "codestral:22b",
-    "codellama:7b",
-    "gemma2:9b"
-]
-
 # ---------------------------------------------------------------------------
 # Embedding / RAG Settings
 # ---------------------------------------------------------------------------

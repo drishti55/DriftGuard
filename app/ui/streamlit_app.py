@@ -336,8 +336,7 @@ def render_analysis_configuration():
 
     col1, col2 = st.columns(2)
     with col1:
-        from app.config import SUPPORTED_MODELS
-        model = st.selectbox("LLM Reasoning Model", SUPPORTED_MODELS)
+        model = st.selectbox("LLM Reasoning Model", ["qwen2.5-coder:7b", "codellama:7b", "starcoder2:3b"])
     with col2:
         analysis_mode = st.radio(
             "Candidate Coverage",

@@ -18,14 +18,13 @@ if not experiments:
 st.markdown("### Executive Summary")
 
 total_runs = len(experiments)
-valid_f1s = [e.f1_score for e in experiments if e.f1_score is not None]
-avg_f1 = sum(valid_f1s) / len(valid_f1s) if valid_f1s else None
+avg_f1 = sum(e.f1_score for e in experiments) / total_runs if total_runs > 0 else 0
 total_cases = sum(e.total_cases_analyzed for e in experiments)
 
 c1, c2, c3 = st.columns(3)
 c1.metric("Total Experiments", total_runs)
 c2.metric("Total Cases Analyzed", total_cases)
-c3.metric("Average F1 Score", f"{avg_f1:.3f}" if avg_f1 is not None else "N/A")
+c3.metric("Average F1 Score", f"{avg_f1:.3f}")
 
 st.markdown("---")
 
@@ -38,10 +37,10 @@ for exp in experiments:
         
         st.markdown("#### Performance Metrics")
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("F1 Score", f"{exp.f1_score:.3f}" if exp.f1_score is not None else "N/A")
-        m2.metric("Precision", f"{exp.precision:.3f}" if exp.precision is not None else "N/A")
-        m3.metric("Recall", f"{exp.recall:.3f}" if exp.recall is not None else "N/A")
-        m4.metric("False Positive Rate", f"{exp.false_positive_rate:.3f}" if exp.false_positive_rate is not None else "N/A")
+        m1.metric("F1 Score", f"{exp.f1_score:.3f}")
+        m2.metric("Precision", f"{exp.precision:.3f}")
+        m3.metric("Recall", f"{exp.recall:.3f}")
+        m4.metric("False Positive Rate", f"{exp.false_positive_rate:.3f}")
         
         st.markdown(f"- **Total Cases Analyzed:** {exp.total_cases_analyzed}")
         st.markdown(f"- **Average Latency:** {exp.avg_latency_s:.2f}s")
