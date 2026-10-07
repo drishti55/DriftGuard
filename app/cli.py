@@ -73,6 +73,7 @@ Examples:
     repair_parser.add_argument("--base", type=str, default=None, help="Base branch or commit reference")
     repair_parser.add_argument("--branch", type=str, default=None, help="Target branch name")
     repair_parser.add_argument("--max", type=int, default=None, help="Maximum repair attempts")
+    repair_parser.add_argument("--model", type=str, default=None, help="OmniRoute model override")
     repair_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
 
     # 7. UI Command
@@ -187,15 +188,36 @@ Examples:
 
     elif args.command == "repair":
         coord = CoordinatorAgent(workspace_path=Path(args.workspace))
-        audited = coord.run_drift_audit(base_branch=args.base, target_branch=args.branch)
+        audited = coord.run_drift_audit(
+            base_branch=args.base,
+            target_branch=args.branch,
+            model=args.model,
+        )
         drifts = audited.audit_report.confirmed_drifts if audited.audit_report else []
-        state = coord.run_repair_workflow(drifts, max_attempts=args.max)
+        state = coord.run_repair_workflow(
+            drifts,
+            max_attempts=args.max,
+            model=args.model,
+            base_branch=args.base,
+            target_branch=args.branch,
+        )
         if args.json:
             print(json.dumps(state.to_dict(), indent=2))
         else:
-            print(f"Repair status: {state.repair_status}")
+            print("\n" + "=" * 60)
+            print("🛡️ DRIFTGUARD PHASE 3 SANDBOXED REPAIR REPORT")
+            print("=" * 60)
+            print(f"  Target Drifts:   {len(drifts)}")
+            print(f"  Repair Status:   {state.repair_status}")
             if state.repair_report:
-                print(f"Attempts: {len(state.repair_report.attempts)}")
+                rep = state.repair_report
+                print(f"  Attempts Made:   {len(rep.attempts)}")
+                print(f"  Verified:        {'✅ YES' if rep.verified else '❌ NO'}")
+                if rep.final_patch:
+                    print("\n  Synthesized Patch:")
+                    for pline in rep.final_patch.strip().splitlines()[:20]:
+                        print(f"    {pline}")
+            print("=" * 60 + "\n")
 
     elif args.command == "ui":
         import subprocess

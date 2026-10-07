@@ -82,7 +82,12 @@ Use repository-relative paths, change the smallest possible lines, and do not in
     def _clean_patch(content: str) -> str:
         content = content.strip()
         if content.startswith("```"):
-            return ""
+            lines = content.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            content = "\n".join(lines).strip()
         match = _DIFF_HEADER.search(content)
         return content[match.start():] if match else ""
 

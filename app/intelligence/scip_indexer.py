@@ -143,6 +143,14 @@ class SCIPIndexer:
                     if ref_target.defined_in != rel:
                         ref_target.references.append((rel, 0))
 
+            # Also index imports to catch module-level dependencies
+            for imp in parsed.imports:
+                for sym_name, sym_ref in self._symbols.items():
+                    if sym_ref.defined_in != rel:
+                        mod_slug = sym_ref.defined_in.replace('/', '.').replace('.py', '')
+                        if sym_name in imp or (mod_slug and mod_slug in imp):
+                            sym_ref.references.append((rel, 0))
+
     def find_references(self, symbol_name: str) -> List[Tuple[str, int]]:
         """Returns all (file_path, line_number) references to the symbol."""
         if not self._indexed:
@@ -171,7 +179,7 @@ class SCIPIndexer:
         for sym in self._symbols.values():
             if sym.defined_in in changed_set:
                 for ref_file, _ in sym.references:
-                    if ref_file not in changed_set:
+                    if ref_file != sym.defined_in:
                         impact_map[sym.defined_in].add(ref_file)
 
         return impact_map

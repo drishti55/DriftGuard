@@ -20,7 +20,7 @@ build_matrix:
       build_command: "npm run build"
       test_command: "npm test -- --watchAll=false"
     backend:
-      working_directory: "./app"
+      working_directory: "."
       build_command: "python -m py_compile app/**/*.py"
       test_command: "pytest tests/"
 

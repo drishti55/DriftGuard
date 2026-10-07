@@ -146,8 +146,11 @@ class CoordinatorAgent:
         self,
         confirmed_drifts: List[ConfirmedDrift],
         max_attempts: Optional[int] = None,
+        model: Optional[str] = None,
+        base_branch: Optional[str] = None,
+        target_branch: Optional[str] = None,
     ) -> CoordinatorSessionState:
-        state = self.run_initial_perception()
+        state = self.run_initial_perception(base_branch=base_branch, target_branch=target_branch)
         if state.audit_status == "SKIPPED":
             state.repair_status = "SKIPPED"
             return state
@@ -165,7 +168,7 @@ class CoordinatorAgent:
 
         def generate_and_execute(context: str):
             candidate, results = engineer.apply_and_validate(
-                drift, runner, state.stack_report.effective_build_matrix, context
+                drift, runner, state.stack_report.effective_build_matrix, context, model=model
             )
             return candidate.patch, results
 
