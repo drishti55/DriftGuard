@@ -39,7 +39,7 @@ Modern software engineering repositories are multi-artifact ecosystems. High-vel
 Existing static analysis tools (linters, formatters) operate within single-language silos and cannot reason across disparate artifact boundaries (e.g., contrasting markdown prose against Python route decorators). Conversely, purely conversational LLMs produce hallucinated "fixes" that fail to compile or break peripheral tests.
 
 DriftGuard resolves this through an **AIDevOps Closed-Loop Paradigm**:
-$$\text{Detect Drift} \longrightarrow \text{Ground in Tree-sitter \& SCIP} \longrightarrow \text{Synthesize Patch} \longrightarrow \text{Sandboxed Compilation} \longrightarrow \text{Iterative Repair} \longrightarrow \text{Transparent PR}$$
+$$\text{Detect Drift} \longrightarrow \text{Ground in Tree-sitter and SCIP} \longrightarrow \text{Synthesize Patch} \longrightarrow \text{Sandboxed Compilation} \longrightarrow \text{Iterative Repair} \longrightarrow \text{Transparent PR}$$
 
 ---
 
@@ -310,16 +310,16 @@ sequenceDiagram
     participant Core as DriftGuard Core
     participant Repair as Sandboxed Repair Engineer
     participant Model as OmniRoute Gateway
-    participant Box as Ephemeral Sandbox (Docker/K8s)
+    participant Sandbox as Ephemeral Sandbox (Docker/K8s)
     participant Git as GitHub Actuator
 
     Core->>Repair: Dispatch Confirmed Drift + AST Context
     loop Up to max_repair_attempts (from .driftguard.yml)
         Repair->>Model: Request Minimal Surgical Patch (with Error Context)
         Model-->>Repair: Proposed Patch (Unified Diff)
-        Repair->>Box: Spin Up Ephemeral Container & Apply Patch
-        Repair->>Box: Execute Build & Test Suite (e.g. npm run build)
-        Box-->>Repair: Return Exit Code, stdout, stderr
+        Repair->>Sandbox: Spin Up Ephemeral Container & Apply Patch
+        Repair->>Sandbox: Execute Build & Test Suite (e.g. npm run build)
+        Sandbox-->>Repair: Return Exit Code, stdout, stderr
 
         alt Build & Test Exit Code == 0 (PASS)
             Repair->>Core: Patch Verified (Passing Build)
@@ -370,7 +370,9 @@ flowchart BT
         E10["ReviewerFeedbackReceivedEvent"]
     end
 
-    E1 & E2 & E3 --> DISPATCH["AIDevOps Event Dispatcher"]
+    E1 --> DISPATCH["AIDevOps Event Dispatcher"]
+    E2 --> DISPATCH
+    E3 --> DISPATCH
     DISPATCH --> ANALYZE["Trigger Incremental Drift Analysis"]
 
     E4 --> LOG["Stream Sandbox Telemetry"]
@@ -412,7 +414,7 @@ DriftGuard is engineered specifically for the **Intelligent Developer Tools (AID
 sequenceDiagram
     participant GH as GitHub CI / CLI
     participant Mgr as DriftGuard Coordinator
-    participant Ext as Tree-sitter & SCIP
+    participant Ext as Tree-sitter and SCIP
     participant Aud as Drift Auditor
     participant Sand as Docker / K8s Sandbox
     participant Route as OmniRoute Gateway
@@ -822,7 +824,7 @@ Every run generates an auditable, machine-readable execution trace:
 1. **Drift Detection Precision & Recall**:
    $$\text{Precision} = \frac{\text{True Drifts Confirmed}}{\text{Total Drifts Flagged}}, \quad \text{Recall} = \frac{\text{True Drifts Confirmed}}{\text{Total Ground-Truth Drifts}}$$
 2. **Sandboxed Repair Success Rate**:
-   $$\text{SRSR} = \frac{\text{Patches Passing 100\% Sandbox Builds \& Tests}}{\text{Total Patches Attempted}}$$
+   $$\text{SRSR} = \frac{\text{Patches Passing 100\% Sandbox Builds and Tests}}{\text{Total Patches Attempted}}$$
 3. **Repair Convergence Efficiency**: Average number of retry attempts required to reach a passing build ($\le \text{max\_retries}$).
 4. **Verbatim Evidence Attribution Rate**: Percentage of flagged drifts backed by exact substring verification.
 5. **Reviewer Acceptance Rate**: Ratio of DriftGuard-generated PRs approved or merged by human developers without major manual edits.
